@@ -1,0 +1,37 @@
+name: KCS - sync issues to BookStack
+ 
+on:
+  issues:
+    types: [opened, edited, closed]
+ 
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+ 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+ 
+      - name: Install marked
+        run: |
+          npm init -y > /dev/null
+          npm install marked@9 > /dev/null
+ 
+      - name: Create or update BookStack page
+        env:
+          BOOKSTACK_API_ID: ${{ secrets.BOOKSTACK_API_ID }}
+          BOOKSTACK_API_SECRET: ${{ secrets.BOOKSTACK_API_SECRET }}
+          BOOKSTACK_URL: ${{ secrets.BOOKSTACK_URL }}
+          BOOKSTACK_BOOK_ID: ${{ secrets.BOOKSTACK_BOOK_ID }}
+          ISSUE_ACTION: ${{ github.event.action }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          ISSUE_STATE: ${{ github.event.issue.state }}
+          ISSUE_LABELS: ${{ join(github.event.issue.labels.*.name, ',') }}
+        run: node .github/scripts/sync-issue.js
